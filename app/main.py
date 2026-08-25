@@ -4,6 +4,8 @@ import joblib
 import pandas as pd
 from fastapi import FastAPI
 
+from app.models.schemas import PredictionInput
+
 
 MODEL_PATH = "ml/saved_model/model.joblib"
 
@@ -32,18 +34,9 @@ def root():
 
 
 @app.post("/predict")
-def predict(house_data: dict):
+def predict(house_data: PredictionInput):
 
-    required_features = [
-        "OverallQual",
-        "GrLivArea",
-        "BedroomAbvGr",
-        "FullBath",
-        "GarageCars"
-    ]
-
-    input_data = pd.DataFrame([house_data])
-    input_data = input_data[required_features]
+    input_data = pd.DataFrame([house_data.model_dump()])
 
     prediction = model.predict(input_data)
 
