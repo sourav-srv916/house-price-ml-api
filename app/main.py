@@ -3,15 +3,17 @@
 # ---------------------------------------------------------
 
 from contextlib import asynccontextmanager
+import time
 import uuid
 
 import joblib
 import pandas as pd
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from app.models.schemas import PredictionInput, PredictionOutput
+from app.logging_config import logger
 
 
 # ---------------------------------------------------------
@@ -61,17 +63,37 @@ async def lifespan(app: FastAPI):
 
     global model
 
-    print("Loading trained model...")
+    logger.info(
+        "Loading trained model...",
+        extra={"request_id": "startup"}
+    )
 
-    # Load the saved ML Pipeline/model
-    model = joblib.load(MODEL_PATH)
+    try:
 
-    print("Model loaded successfully.")
+        # Load the saved ML Pipeline/model
+        model = joblib.load(MODEL_PATH)
+
+        logger.info(
+            "Model loaded successfully",
+            extra={"request_id": "startup"}
+        )
+
+    except Exception as error:
+
+        logger.error(
+            f"Failed to load model: {error}",
+            extra={"request_id": "startup"}
+        )
+
+        raise
 
     # Application continues running after yield
     yield
 
-    print("Application shutting down...")
+    logger.info(
+        "Application shutting down",
+        extra={"request_id": "shutdown"}
+    )
 
 
 # ---------------------------------------------------------
@@ -87,6 +109,41 @@ app = FastAPI(
 
 
 # ---------------------------------------------------------
+# REQUEST LOGGING MIDDLEWARE
+# ---------------------------------------------------------
+
+@app.middleware("http")
+async def logging_middleware(request: Request, call_next):
+
+    # Generate a unique ID for this request
+    request_id = str(uuid.uuid4())
+
+    # Store request ID so the endpoint can access it
+    request.state.request_id = request_id
+
+    # Record start time
+    start_time = time.perf_counter()
+
+    try:
+
+        # Send request to the actual endpoint
+        response = await call_next(request)
+
+        return response
+
+    finally:
+
+        # Calculate how long the request took
+        duration = time.perf_counter() - start_time
+
+        logger.info(
+            f"{request.method} {request.url.path} "
+            f"status={getattr(locals().get('response'), 'status_code', 'unknown')} "
+            f"duration={duration:.4f}s",
+            extra={"request_id": request_id}
+        )
+
+# ---------------------------------------------------------
 # CUSTOM EXCEPTION HANDLER
 # ---------------------------------------------------------
 
@@ -96,13 +153,21 @@ app = FastAPI(
 # ---------------------------------------------------------
 
 @app.exception_handler(PredictionInputError)
-async def prediction_input_error_handler(request, exc):
+async def prediction_input_error_handler(request: Request, exc: PredictionInputError):
+
+    request_id = request.state.request_id
+
+    logger.error(
+        f"Prediction input error: {exc}",
+        extra={"request_id": request_id}
+    )
 
     return JSONResponse(
         status_code=400,
         content={
             "error": "Invalid prediction input",
-            "detail": str(exc)
+            "detail": str(exc),
+            "request_id": request_id
         }
     )
 
@@ -112,7 +177,14 @@ async def prediction_input_error_handler(request, exc):
 # ---------------------------------------------------------
 
 @app.get("/")
-def root():
+def root(request: Request):
+
+    request_id = request.state.request_id
+
+    logger.info(
+        "Root endpoint called",
+        extra={"request_id": request_id}
+    )
 
     return {
         "message": "ML API is alive"
@@ -128,7 +200,14 @@ def root():
 # ---------------------------------------------------------
 
 @app.get("/health")
-def health():
+def health(request: Request):
+
+    request_id = request.state.request_id
+
+    logger.info(
+        "Health check called",
+        extra={"request_id": request_id}
+    )
 
     return {
         "status": "ok",
@@ -145,10 +224,9 @@ def health():
 # ---------------------------------------------------------
 
 @app.post("/predict", response_model=PredictionOutput)
-def predict(house_data: PredictionInput):
+def predict(house_data: PredictionInput, request: Request):
 
-    # Generate a unique ID for this request
-    request_id = str(uuid.uuid4())
+    request_id = request.state.request_id
 
     # Convert Pydantic object into a Python dictionary
     house_dict = house_data.model_dump()
@@ -182,9 +260,12 @@ def predict(house_data: PredictionInput):
 
         # Log the actual error internally.
         # This is useful for developers when debugging.
-        print(f"Prediction error: {error}")
+        logger.error(
+            f"Prediction failed: {error}",
+            extra={"request_id": request_id}
+        )
 
-        # Send only a safe message to the client.
+         # Return safe error to client
         raise HTTPException(
             status_code=500,
             detail="Prediction failed"
@@ -218,6 +299,14 @@ def predict(house_data: PredictionInput):
 
     confidence = None
 
+    # -----------------------------------------------------
+    # LOG SUCCESSFUL PREDICTION
+    # -----------------------------------------------------
+
+    logger.info(
+        f"Prediction successful: prediction={float(prediction[0])}",
+        extra={"request_id": request_id}
+    )
 
     # -----------------------------------------------------
     # RETURN FINAL RESPONSE
