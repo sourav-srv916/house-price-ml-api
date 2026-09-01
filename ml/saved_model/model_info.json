@@ -1,0 +1,12 @@
+{
+    "model_type": "RandomForestRegressor",
+    "model_version": "1.0",
+    "training_date": "Aug 20, 2026",
+    "expected_features": [
+        "OverallQual",
+        "GrLivArea",
+        "BedroomAbvGr",
+        "FullBath",
+        "GarageCars"
+    ]
+}

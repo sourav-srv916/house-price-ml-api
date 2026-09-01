@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import List
 
 
 # INPUT MODEL - This model defines what data the user is allowed to send to the /predict endpoint.
@@ -57,3 +58,32 @@ class PredictionOutput(BaseModel):
 
     # Unique ID generated for every request
     request_id: str
+
+
+# PREDICTION BATCH INPUT - Accept between 1 and 100 house inputs
+
+class PredictionBatchInput(BaseModel):
+    
+    houses: List[PredictionInput] = Field(
+        ...,
+        min_length=1,
+        max_length=100,
+        description="List of 1 to 100 house inputs"
+    )
+
+
+# PREDICTION BATCH OUTPUT - Return a list of prediction results
+
+class PredictionBatchOutput(BaseModel):
+     
+    predictions: List[PredictionOutput]
+
+
+# MODEL INFO OUTPUT - It makes the endpoint more structured and consistent (optional)
+
+class ModelInfoOutput(BaseModel):
+
+    model_type: str
+    model_version: str
+    training_date: str
+    expected_features: List[str]

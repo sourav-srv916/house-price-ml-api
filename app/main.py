@@ -5,6 +5,7 @@
 from contextlib import asynccontextmanager
 import time
 import uuid
+import json
 
 import joblib
 
@@ -22,6 +23,9 @@ from app.exceptions import PredictionInputError
 
 # Location of the saved ML model
 MODEL_PATH = "ml/saved_model/model.joblib"
+
+# Location of the model Meta data
+MODEL_INFO_PATH = "ml/saved_model/model_info.json"
 
 
 # ---------------------------------------------------------
@@ -47,6 +51,10 @@ async def lifespan(app: FastAPI):
 
         # Load the saved ML Pipeline/model
         model = joblib.load(MODEL_PATH)
+
+        # Load model metadata
+        with open(MODEL_INFO_PATH, "r", encoding="utf-8") as file:
+            app.state.model_info = json.load(file)
 
         logger.info(
             "Model loaded successfully",
