@@ -60,15 +60,14 @@ class PredictionOutput(BaseModel):
     request_id: str
 
 
-# PREDICTION BATCH INPUT - Accept between 1 and 100 house inputs
+# PREDICTION BATCH INPUT - Accept at least 1 house input and Maximum batch size is controlled by configuration.
 
 class PredictionBatchInput(BaseModel):
     
     houses: List[PredictionInput] = Field(
         ...,
         min_length=1,
-        max_length=100,
-        description="List of 1 to 100 house inputs"
+        description="List of house inputs; maximum size is controlled by configuration"
     )
 
 

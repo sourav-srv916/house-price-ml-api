@@ -1,6 +1,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from app.config import settings
 
 
 # ---------------------------------------------------------
@@ -48,7 +49,7 @@ class RequestIdFilter(logging.Filter):
 
 logger = logging.getLogger("house_price_api")
 
-logger.setLevel(logging.INFO)
+logger.setLevel(getattr(logging, settings.LOG_LEVEL.upper()))
 
 
 # Prevent duplicate log messages

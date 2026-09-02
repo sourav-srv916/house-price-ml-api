@@ -10,14 +10,13 @@ from fastapi import APIRouter, HTTPException, Request
 from app.logging_config import logger
 from app.models.schemas import PredictionInput, PredictionOutput, PredictionBatchInput, PredictionBatchOutput, ModelInfoOutput
 from app.exceptions import PredictionInputError
+from app.config import settings
 
 # ---------------------------------------------------------
 # API VERSION 1 ROUTER
 # ---------------------------------------------------------
 
 router = APIRouter(prefix="/api/v1", tags=["Version 1 API"])
-
-MODEL_VERSION = "1.0"
 
 
 # ---------------------------------------------------------
@@ -60,6 +59,9 @@ def predict(house_data: PredictionInput, request: Request):
     request_id = request.state.request_id
 
     model = request.app.state.model
+
+    model_info = request.app.state.model_info
+    model_version = model_info["model_version"]
 
     # Convert validated input(Pydantic object) into Python dictionary
     house_dict = house_data.model_dump()
@@ -134,7 +136,7 @@ def predict(house_data: PredictionInput, request: Request):
     return {
         "prediction": float(prediction[0]),
         "confidence": confidence,
-        "model_version": MODEL_VERSION,
+        "model_version": model_version, 
         "request_id": request_id
     }
 
@@ -151,11 +153,21 @@ def predict_batch(batch_data: PredictionBatchInput, request: Request):
     # Get the model loaded during application startup
     model = request.app.state.model
 
+    model_version = request.app.state.model_info["model_version"]
+
     # Get the list of houses
     houses = batch_data.houses
 
     # Number of houses in this batch
     batch_size = len(houses)
+
+    # Enforce configured batch-size limit
+    if batch_size > settings.MAX_BATCH_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Maximum batch size is {settings.MAX_BATCH_SIZE}"
+        )
+
 
     # Start measuring prediction time
     start_time = time.perf_counter()
@@ -204,7 +216,7 @@ def predict_batch(batch_data: PredictionBatchInput, request: Request):
             PredictionOutput(
                 prediction=float(prediction),
                 confidence=None,
-                model_version=MODEL_VERSION,
+                model_version=model_version, 
                 request_id=request_id
             )
         )

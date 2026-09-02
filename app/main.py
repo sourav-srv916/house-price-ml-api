@@ -18,15 +18,10 @@ from app.exceptions import PredictionInputError
 
 
 # ---------------------------------------------------------
-# CONFIGURATION
+# CONFIGURATION settings import from app/config.py
 # ---------------------------------------------------------
 
-# Location of the saved ML model
-MODEL_PATH = "ml/saved_model/model.joblib"
-
-# Location of the model Meta data
-MODEL_INFO_PATH = "ml/saved_model/model_info.json"
-
+from app.config import settings
 
 # ---------------------------------------------------------
 # APPLICATION LIFESPAN
@@ -50,10 +45,10 @@ async def lifespan(app: FastAPI):
     try:
 
         # Load the saved ML Pipeline/model
-        model = joblib.load(MODEL_PATH)
+        model = joblib.load(settings.MODEL_PATH)
 
         # Load model metadata
-        with open(MODEL_INFO_PATH, "r", encoding="utf-8") as file:
+        with open(settings.MODEL_INFO_PATH, "r", encoding="utf-8") as file:
             app.state.model_info = json.load(file)
 
         logger.info(
@@ -87,9 +82,9 @@ async def lifespan(app: FastAPI):
 # ---------------------------------------------------------
 
 app = FastAPI(
-    title="House Price Prediction API",
-    description="ML API for predicting house prices",
-    version="1.0.0",
+    title=settings.API_TITLE,
+    description=settings.API_DESCRIPTION,
+    version=settings.API_VERSION,
     lifespan=lifespan
 )
 
