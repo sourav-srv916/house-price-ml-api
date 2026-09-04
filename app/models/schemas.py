@@ -86,3 +86,22 @@ class ModelInfoOutput(BaseModel):
     model_version: str
     training_date: str
     expected_features: List[str]
+
+
+# PREDICTION V2 OUTPUT - V2 adds prediction_unit to the response.
+
+class PredictionV2Output(BaseModel):
+    # Predicted house price
+    prediction: float
+
+    # Confidence is not available for our regression model
+    confidence: float | None
+
+    # Version of the ML model being used
+    model_version: str
+
+    # Unique ID generated for every request
+    request_id: str
+
+    # New field introduced in API v2
+    prediction_unit: str
