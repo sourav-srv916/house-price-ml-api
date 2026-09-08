@@ -67,3 +67,79 @@ The client sends house features to the `/predict` endpoint. The API first valida
 ## Project Goal
 
 The goal of this project is to understand how a machine learning regression model can be developed, exposed through a REST API, containerized using Docker, and monitored in a practical software engineering workflow.
+
+## How to Run This Project
+
+### Prerequisites
+
+Before running the project, make sure you have:
+
+- Git installed
+- Docker Desktop installed and running
+- Python installation is not required because the application runs inside a Docker container.
+
+### 1. Clone the Repository
+
+Clone the project from GitHub:
+
+```bash
+git clone https://github.com/sourav-srv916/house-price-ml-api
+```
+
+Move into the project directory:
+
+```bash
+cd house-price-ml-api
+```
+
+### 2. Create the `.env` File
+
+Create your local `.env` file from `.env.example`:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+### 3. Start the Application
+
+Build the Docker image and start the API using Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+### 4. Access the API
+
+Open Swagger UI in your browser:
+
+```text
+http://localhost:8000/docs
+```
+
+Use Swagger UI to test the **Health** and **Prediction** endpoints.
+
+### 5. Run the Project Again
+
+If no project changes were made and the image is already built:
+
+```bash
+docker compose up
+```
+
+No rebuild is required.
+
+### 6. Stop the Application
+
+Press `Ctrl+C` or run:
+
+```bash
+docker compose down
+```
+
+### 7. Rebuild After Project Changes
+
+If project files, dependencies, the Dockerfile, or model configuration changes:
+
+```bash
+docker compose up --build
+```
