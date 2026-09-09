@@ -1,10 +1,13 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List
 
 
 # INPUT MODEL - This model defines what data the user is allowed to send to the /predict endpoint.
 
 class PredictionInput(BaseModel):
+
+    # Reject unexpected fields
+    model_config = ConfigDict(extra="forbid")
 
     # Overall quality of the house. - Value must be between 1 and 10.
     OverallQual: int = Field(
@@ -63,6 +66,9 @@ class PredictionOutput(BaseModel):
 # PREDICTION BATCH INPUT - Accept at least 1 house input and Maximum batch size is controlled by configuration.
 
 class PredictionBatchInput(BaseModel):
+
+    # Reject unexpected fields
+    model_config = ConfigDict(extra="forbid")
     
     houses: List[PredictionInput] = Field(
         ...,

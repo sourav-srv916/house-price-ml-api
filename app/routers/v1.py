@@ -12,6 +12,9 @@ from app.models.schemas import PredictionInput, PredictionOutput, PredictionBatc
 from app.exceptions import PredictionInputError
 from app.config import settings
 
+from fastapi import Depends
+from app.dependencies import verify_api_key
+
 # ---------------------------------------------------------
 # API VERSION 1 ROUTER
 # ---------------------------------------------------------
@@ -53,7 +56,7 @@ def health(request: Request):
 # the response must follow the PredictionOutput schema.
 # ---------------------------------------------------------
 
-@router.post("/predict", response_model=PredictionOutput)
+@router.post("/predict", response_model=PredictionOutput, dependencies=[Depends(verify_api_key)])
 def predict(house_data: PredictionInput, request: Request):
 
     request_id = request.state.request_id
@@ -144,7 +147,7 @@ def predict(house_data: PredictionInput, request: Request):
 # PREDICTION_BATCH ENDPOINT
 # ---------------------------------------------------------
 
-@router.post("/predict-batch", response_model=PredictionBatchOutput)
+@router.post("/predict-batch", response_model=PredictionBatchOutput, dependencies=[Depends(verify_api_key)])
 def predict_batch(batch_data: PredictionBatchInput, request: Request):
 
     # Get the request ID created by the middleware
@@ -237,7 +240,7 @@ def predict_batch(batch_data: PredictionBatchInput, request: Request):
 # MODEL_INFO ENDPOINT
 # ---------------------------------------------------------
 
-@router.get("/model-info", response_model=ModelInfoOutput)
+@router.get("/model-info", response_model=ModelInfoOutput, dependencies=[Depends(verify_api_key)])
 def model_info(request: Request):
 
     request_id = request.state.request_id

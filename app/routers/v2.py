@@ -9,6 +9,9 @@ from fastapi import APIRouter, HTTPException, Request
 from app.logging_config import logger
 from app.models.schemas import PredictionInput, PredictionV2Output
 
+from fastapi import Depends
+from app.dependencies import verify_api_key
+
 
 # ---------------------------------------------------------
 # API VERSION 2 ROUTER
@@ -21,7 +24,7 @@ router = APIRouter(prefix="/api/v2", tags=["Version 2 API"])
 # PREDICTION V2 ENDPOINT
 # ---------------------------------------------------------
 
-@router.post("/predict", response_model=PredictionV2Output)
+@router.post("/predict", response_model=PredictionV2Output, dependencies=[Depends(verify_api_key)])
 def predict_v2(house_data: PredictionInput, request: Request):
 
     # Get request ID from middleware

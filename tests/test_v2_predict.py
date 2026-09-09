@@ -1,3 +1,6 @@
+
+from app.config import settings
+
 # ---------------------------------------------------------
 # TEST V2 VALID PREDICTION
 # ---------------------------------------------------------
@@ -15,7 +18,8 @@ def test_predict_v2_valid_input(client):
 
     response = client.post(
         "/api/v2/predict",
-        json=payload
+        json=payload,
+        headers={"X-API-Key": settings.API_KEY}
     )
 
     assert response.status_code == 200
@@ -54,13 +58,15 @@ def test_v1_and_v2_have_different_response_shapes(client):
     # Call V1
     v1_response = client.post(
         "/api/v1/predict",
-        json=payload
+        json=payload,
+        headers={"X-API-Key": settings.API_KEY}
     )
 
     # Call V2
     v2_response = client.post(
         "/api/v2/predict",
-        json=payload
+        json=payload,
+        headers={"X-API-Key": settings.API_KEY}
     )
 
     assert v1_response.status_code == 200
@@ -98,7 +104,8 @@ def test_predict_v2_invalid_input(client):
 
     response = client.post(
         "/api/v2/predict",
-        json=payload
+        json=payload,
+        headers={"X-API-Key": settings.API_KEY}
     )
 
     assert response.status_code == 422

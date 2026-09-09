@@ -11,6 +11,7 @@ import joblib
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.logging_config import logger
 from app.routers.v1 import router as v1_router
@@ -89,6 +90,14 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Allow only configured frontend origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS.split(","),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ---------------------------------------------------------
 # REQUEST LOGGING MIDDLEWARE
