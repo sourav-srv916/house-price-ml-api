@@ -1,8 +1,10 @@
-from fastapi import Header, HTTPException
+from fastapi import Header, HTTPException, Depends
+from fastapi.security import APIKeyHeader
 from app.config import settings
 
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
-def verify_api_key(x_api_key: str | None = Header(default=None)):
+def verify_api_key(x_api_key: str | None = Depends(api_key_header)):
     # Check whether the API key is provided
     if x_api_key is None:
         raise HTTPException(
