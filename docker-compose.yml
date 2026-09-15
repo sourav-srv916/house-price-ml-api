@@ -7,3 +7,12 @@ services:
       - .env
     volumes:
       - ./ml/saved_model:/app/ml/saved_model
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - api

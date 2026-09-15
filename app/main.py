@@ -18,6 +18,8 @@ from app.routers.v1 import router as v1_router
 from app.routers.v2 import router as v2_router
 from app.exceptions import PredictionInputError
 
+from prometheus_fastapi_instrumentator import Instrumentator
+
 
 # ---------------------------------------------------------
 # CONFIGURATION settings import from app/config.py
@@ -89,6 +91,8 @@ app = FastAPI(
     version=settings.API_VERSION,
     lifespan=lifespan
 )
+
+Instrumentator().instrument(app).expose(app)
 
 # Allow only configured frontend origins
 app.add_middleware(

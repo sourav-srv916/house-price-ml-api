@@ -15,6 +15,8 @@ from app.config import settings
 from fastapi import Depends
 from app.dependencies import verify_api_key
 
+from app.metrics import house_price_predictions_total
+
 # ---------------------------------------------------------
 # API VERSION 1 ROUTER
 # ---------------------------------------------------------
@@ -129,6 +131,9 @@ def predict(house_data: PredictionInput, request: Request):
 
     confidence = None
 
+    # Increment custom Prometheus metric because the prediction was successful.
+    house_price_predictions_total.inc()
+
     # Log successful prediction
     logger.info(
         f"Prediction successful: prediction={float(prediction[0])}",
@@ -207,6 +212,9 @@ def predict_batch(batch_data: PredictionBatchInput, request: Request):
             status_code=500,
             detail="Batch prediction failed"
         )
+
+    # Custom Prometheus metric - count each successful individual prediction.
+    house_price_predictions_total.inc(len(predictions))
 
     # Calculate successful prediction duration
     duration = time.perf_counter() - start_time
