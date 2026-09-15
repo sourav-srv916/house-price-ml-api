@@ -34,3 +34,19 @@ def test_prediction_counter_increases(client):
     after = REGISTRY.get_sample_value("house_price_predictions_total")
 
     assert after == before + 1
+
+
+def test_v2_prediction_counter_increases(client):
+    before = REGISTRY.get_sample_value("house_price_predictions_total")
+
+    response = client.post(
+        "/api/v2/predict",
+        json=VALID_INPUT,
+        headers={"X-API-Key": settings.API_KEY}
+    )
+
+    assert response.status_code == 200
+
+    after = REGISTRY.get_sample_value("house_price_predictions_total")
+
+    assert after == before + 1

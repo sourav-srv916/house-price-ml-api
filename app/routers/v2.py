@@ -12,6 +12,7 @@ from app.models.schemas import PredictionInput, PredictionV2Output
 from fastapi import Depends
 from app.dependencies import verify_api_key
 
+from app.metrics import house_price_predictions_total
 
 # ---------------------------------------------------------
 # API VERSION 2 ROUTER
@@ -66,6 +67,9 @@ def predict_v2(house_data: PredictionInput, request: Request):
             status_code=400,
             detail="Model returned an empty prediction"
         )
+
+    # Count successful V2 predictions
+    house_price_predictions_total.inc()
 
     # Our regression model does not provide confidence
     confidence = None
