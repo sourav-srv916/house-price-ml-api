@@ -42,8 +42,6 @@ The 2-worker configuration reduced the total test duration by approximately **55
 | PowerShell `curl` caused a warning | Used `curl.exe` to check `/metrics` |
 | Starlette/httpx deprecation warning appeared | Confirmed that tests still passed; warning did not affect functionality |
 
-The `/health` issue was a test-path mistake, not a production API bug.
-
 ### Testing Investigation
 Several areas were investigated, including **batch performance, log growth, timeout behavior and concurrent request handling**. No confirmed defects were found in the first three areas. A performance issue was identified under 100 concurrent requests with a single Uvicorn worker, which was addressed by configuring two workers.
 
