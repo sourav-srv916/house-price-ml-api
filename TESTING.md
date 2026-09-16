@@ -38,15 +38,34 @@ The 2-worker configuration reduced the total test duration by approximately **55
 | Issue | Fix |
 | :--- | :--- |
 | Single worker was slower under 100 concurrent requests | Changed Uvicorn configuration from 1 worker to 2 workers |
+| Prometheus prediction counter did not initially aggregate correctly across 2 Uvicorn workers | Enabled Prometheus multiprocess mode using a shared `PROMETHEUS_MULTIPROC_DIR` and `MultiProcessCollector` |
 | Docker worker change was not reflected immediately | Rebuilt the Docker image using `docker compose up --build` |
 | PowerShell `curl` caused a warning | Used `curl.exe` to check `/metrics` |
 | Starlette/httpx deprecation warning appeared | Confirmed that tests still passed; warning did not affect functionality |
 
-The `/health` issue was a test-path mistake, not a production API bug.
-
 ### Testing Investigation
 Several areas were investigated, including **batch performance, log growth, timeout behavior and concurrent request handling**. No confirmed defects were found in the first three areas. A performance issue was identified under 100 concurrent requests with a single Uvicorn worker, which was addressed by configuring two workers.
 
+The **Prometheus counter** did not initially aggregate correctly across 2 Uvicorn workers. This was fixed using **Prometheus multiprocess mode**. After rebuilding, the load test achieved **100/100** successful requests and `/metrics` reported **104.0**, confirming correct aggregation.
+
+### Prometheus Multi-Worker Testing
+
+| Stage | Request Flow | `/metrics` Result |
+| :--- | :--- | :---: |
+| **Before the fix** | 100 requests → Worker 1 + Worker 2 | **49 or 51** |
+| **After the fix** | 100 requests → Worker 1 + Worker 2 → `MultiProcessCollector` | **100.0** |
+
+### Final `/metrics` Verification
+
+| Source | Successful predictions |
+| :--- | ---: |
+| Load test | 100 |
+| V1 `/predict` | 1 |
+| V1 `/predict-batch` | 2 |
+| V2 `/predict` | 1 |
+| **Total `/metrics`** | **104.0** |
+
+**Calculation:** `100 + 1 + 2 + 1 = 104`
 ## 4. Final Verification
 
 After the fixes:
@@ -56,6 +75,8 @@ After the fixes:
 - Integration tests: **5 passed**
 - Load test: **100 successful / 0 failed**
 - Prometheus `/metrics` verified successfully.
+- Prometheus **multi-worker aggregation** verified successfully.
+- Final `house_price_predictions_total`: **104.0**
 - 2-worker configuration verified successfully.
 
 ## Conclusion

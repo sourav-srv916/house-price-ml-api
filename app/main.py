@@ -10,7 +10,7 @@ import json
 import joblib
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.logging_config import logger
@@ -19,6 +19,8 @@ from app.routers.v2 import router as v2_router
 from app.exceptions import PredictionInputError
 
 from prometheus_fastapi_instrumentator import Instrumentator
+
+from prometheus_client import CONTENT_TYPE_LATEST, CollectorRegistry, generate_latest, multiprocess
 
 
 # ---------------------------------------------------------
@@ -92,7 +94,9 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-Instrumentator().instrument(app).expose(app)
+# Instrument the FastAPI application for Prometheus monitoring
+instrumentator = Instrumentator()
+instrumentator.instrument(app)
 
 # Allow only configured frontend origins
 app.add_middleware(
@@ -184,6 +188,25 @@ def root(request: Request):
     return {
         "message": "ML API is alive"
     }
+
+
+# ---------------------------------------------------------
+# METRICS ENDPOINT
+# ---------------------------------------------------------
+
+@app.get("/metrics")
+def metrics():
+    # Create a Prometheus registry for collecting metrics
+    registry = CollectorRegistry()
+
+    # Collect metrics from all Uvicorn worker processes
+    multiprocess.MultiProcessCollector(registry)
+
+    # Return the combined metrics in Prometheus format
+    return Response(
+        generate_latest(registry),
+        media_type=CONTENT_TYPE_LATEST
+    )
 
 # ---------------------------------------------------------
 # INCLUDE VERSION 1 ROUTES
