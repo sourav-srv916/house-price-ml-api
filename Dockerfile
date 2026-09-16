@@ -17,7 +17,7 @@ COPY . .
 EXPOSE 8000
 
 # Start the FastAPI application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
 
 # 0.0.0.0 is required so the API listens on all container network
 # interfaces and can receive requests forwarded from the host machine.
