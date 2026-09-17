@@ -302,7 +302,7 @@ The deployed API can be accessed using the public Render URL.
 Swagger documentation is available at:
 
 ```text
-https://YOUR-RENDER-URL/docs
+https://house-price-ml-api-lcp2.onrender.com/docs
 ```
 
 ## API Examples
@@ -401,3 +401,6 @@ The project was verified locally using a fresh Docker Compose rebuild.
 - Prometheus metrics: working
 - Prometheus scraping: verified
 - GitHub Actions workflow: added to run pytest on pushes to `main`
+- Render deployment: succeeded
+- Public Render API: working
+- Deployed API endpoints: tested successfully
