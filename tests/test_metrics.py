@@ -2,7 +2,6 @@ from prometheus_client import REGISTRY
 
 from app.config import settings
 
-
 VALID_INPUT = {
     "OverallQual": 7,
     "GrLivArea": 1710,

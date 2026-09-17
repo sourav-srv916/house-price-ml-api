@@ -3,19 +3,22 @@
 # ---------------------------------------------------------
 
 import time
+
 import pandas as pd
+from fastapi import APIRouter, Depends, HTTPException, Request
 
-from fastapi import APIRouter, HTTPException, Request
-
-from app.logging_config import logger
-from app.models.schemas import PredictionInput, PredictionOutput, PredictionBatchInput, PredictionBatchOutput, ModelInfoOutput
-from app.exceptions import PredictionInputError
 from app.config import settings
-
-from fastapi import Depends
 from app.dependencies import verify_api_key
-
+from app.exceptions import PredictionInputError
+from app.logging_config import logger
 from app.metrics import house_price_predictions_total
+from app.models.schemas import (
+    ModelInfoOutput,
+    PredictionBatchInput,
+    PredictionBatchOutput,
+    PredictionInput,
+    PredictionOutput,
+)
 
 # ---------------------------------------------------------
 # API VERSION 1 ROUTER
@@ -93,7 +96,7 @@ def predict(house_data: PredictionInput, request: Request):
     try:
         prediction = model.predict(input_data)
 
-    except Exception as error:
+    except Exception as error:      # noqa: BLE001
 
         logger.error(
             f"Prediction failed: {error}",
@@ -193,7 +196,7 @@ def predict_batch(batch_data: PredictionBatchInput, request: Request):
         # Run prediction ONCE for the entire batch
         predictions = model.predict(input_data)
 
-    except Exception as error:
+    except Exception as error:      # noqa: BLE001
 
         # Calculate duration even when prediction fails
         duration = time.perf_counter() - start_time

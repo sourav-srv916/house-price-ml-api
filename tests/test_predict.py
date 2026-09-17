@@ -1,6 +1,7 @@
 
 from app.config import settings
 
+
 # Test prediction with valid input
 def test_predict_valid_input(client):
     payload = {
@@ -78,7 +79,7 @@ def test_predict_batch_oversized(client):
     }
 
     payload = {
-        "houses": [house, house, house]
+        "houses": [house] * 101
     }
 
     response = client.post(

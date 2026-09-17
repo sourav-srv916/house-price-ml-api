@@ -1,6 +1,5 @@
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List
 
+from pydantic import BaseModel, ConfigDict, Field
 
 # INPUT MODEL - This model defines what data the user is allowed to send to the /predict endpoint.
 
@@ -70,7 +69,7 @@ class PredictionBatchInput(BaseModel):
     # Reject unexpected fields
     model_config = ConfigDict(extra="forbid")
     
-    houses: List[PredictionInput] = Field(
+    houses: list[PredictionInput] = Field(
         ...,
         min_length=1,
         description="List of house inputs; maximum size is controlled by configuration"
@@ -81,7 +80,7 @@ class PredictionBatchInput(BaseModel):
 
 class PredictionBatchOutput(BaseModel):
      
-    predictions: List[PredictionOutput]
+    predictions: list[PredictionOutput]
 
 
 # MODEL INFO OUTPUT - It makes the endpoint more structured and consistent (optional)
@@ -91,7 +90,7 @@ class ModelInfoOutput(BaseModel):
     model_type: str
     model_version: str
     training_date: str
-    expected_features: List[str]
+    expected_features: list[str]
 
 
 # PREDICTION V2 OUTPUT - V2 adds prediction_unit to the response.

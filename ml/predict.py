@@ -3,7 +3,6 @@ from pathlib import Path
 import joblib
 import pandas as pd
 
-
 # Project paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 MODEL_PATH = BASE_DIR / "ml" / "saved_model" / "model.joblib"

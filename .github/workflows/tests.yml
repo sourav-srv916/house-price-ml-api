@@ -1,0 +1,52 @@
+name: Run Tests
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      MODEL_PATH: ml/saved_model/model.joblib
+      MODEL_INFO_PATH: ml/saved_model/model_info.json
+      API_KEY: test-api-key
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Create environment file
+        run: |
+          echo "MODEL_PATH=ml/saved_model/model.joblib" >> .env
+          echo "MODEL_INFO_PATH=ml/saved_model/model_info.json" >> .env
+          echo "API_KEY=test-api-key" >> .env
+
+      - name: Start Docker services
+        run: docker compose up -d --build
+
+      - name: Wait for API
+        run: |
+          for i in {1..30}; do
+            if curl -f http://localhost:8000/; then
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Run tests
+        run: pytest -q
+
+      - name: Stop Docker services
+        if: always()
+        run: docker compose down

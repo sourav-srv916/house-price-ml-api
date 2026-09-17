@@ -3,16 +3,12 @@
 # ---------------------------------------------------------
 
 import pandas as pd
+from fastapi import APIRouter, Depends, HTTPException, Request
 
-from fastapi import APIRouter, HTTPException, Request
-
-from app.logging_config import logger
-from app.models.schemas import PredictionInput, PredictionV2Output
-
-from fastapi import Depends
 from app.dependencies import verify_api_key
-
+from app.logging_config import logger
 from app.metrics import house_price_predictions_total
+from app.models.schemas import PredictionInput, PredictionV2Output
 
 # ---------------------------------------------------------
 # API VERSION 2 ROUTER
@@ -48,7 +44,7 @@ def predict_v2(house_data: PredictionInput, request: Request):
     try:
         prediction = model.predict(input_data)
 
-    except Exception as error:
+    except Exception as error:      # noqa: BLE001
 
         logger.error(
             f"V2 prediction failed: {error}",

@@ -1,8 +1,8 @@
 import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from app.config import settings
 
+from app.config import settings
 
 # ---------------------------------------------------------
 # LOG DIRECTORY

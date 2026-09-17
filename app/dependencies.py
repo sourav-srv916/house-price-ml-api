@@ -1,5 +1,6 @@
-from fastapi import Header, HTTPException, Depends
+from fastapi import Depends, HTTPException
 from fastapi.security import APIKeyHeader
+
 from app.config import settings
 
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)

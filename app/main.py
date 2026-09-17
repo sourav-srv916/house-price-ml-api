@@ -2,32 +2,32 @@
 # IMPORTS
 # ---------------------------------------------------------
 
-from contextlib import asynccontextmanager
+import json
+import os
 import time
 import uuid
-import json
+from contextlib import asynccontextmanager
 
 import joblib
-
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
-
-from app.logging_config import logger
-from app.routers.v1 import router as v1_router
-from app.routers.v2 import router as v2_router
-from app.exceptions import PredictionInputError
-
+from fastapi.responses import JSONResponse, Response
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    CollectorRegistry,
+    generate_latest,
+    multiprocess,
+)
 from prometheus_fastapi_instrumentator import Instrumentator
-
-from prometheus_client import CONTENT_TYPE_LATEST, CollectorRegistry, generate_latest, multiprocess
-
 
 # ---------------------------------------------------------
 # CONFIGURATION settings import from app/config.py
 # ---------------------------------------------------------
-
 from app.config import settings
+from app.exceptions import PredictionInputError
+from app.logging_config import logger
+from app.routers.v1 import router as v1_router
+from app.routers.v2 import router as v2_router
 
 # ---------------------------------------------------------
 # APPLICATION LIFESPAN
@@ -54,7 +54,7 @@ async def lifespan(app: FastAPI):
         model = joblib.load(settings.MODEL_PATH)
 
         # Load model metadata
-        with open(settings.MODEL_INFO_PATH, "r", encoding="utf-8") as file:
+        with open(settings.MODEL_INFO_PATH, "r", encoding="utf-8") as file:   # noqa: ASYNC230
             app.state.model_info = json.load(file)
 
         logger.info(
@@ -196,15 +196,18 @@ def root(request: Request):
 
 @app.get("/metrics")
 def metrics():
-    # Create a Prometheus registry for collecting metrics
-    registry = CollectorRegistry()
+    multiproc_dir = os.getenv("PROMETHEUS_MULTIPROC_DIR")
 
-    # Collect metrics from all Uvicorn worker processes
-    multiprocess.MultiProcessCollector(registry)
+    if multiproc_dir and os.path.isdir(multiproc_dir):
+        registry = CollectorRegistry()
+        multiprocess.MultiProcessCollector(registry)
 
-    # Return the combined metrics in Prometheus format
+        metrics_data = generate_latest(registry)
+    else:
+        metrics_data = generate_latest()
+
     return Response(
-        generate_latest(registry),
+        metrics_data,
         media_type=CONTENT_TYPE_LATEST
     )
 
